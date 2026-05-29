@@ -1,6 +1,6 @@
 ---
 name: showcase
-description: Render HTML/SVG mockups, slideshows, demos, or before/after comparisons and serve them on localhost for preview. Use when the user asks to showcase, mockup, preview designs, render variants, build a slideshow, demo a layout, see how X would look, generate design options, compare design directions, or invokes /showcase. Picks rotating design seeds for visual uniqueness across invocations, enforces a beauty bar, and runs mandatory Playwright verification so output is never broken or misaligned.
+description: Render HTML/SVG mockups, slideshows, demos, or before/after comparisons and serve them on localhost for preview. Use when the user asks to showcase, mockup, preview designs, render variants, build a slideshow, demo a layout, see how X would look, generate design options, compare design directions, or invokes /showcase. Composes fresh design seeds for visual uniqueness across invocations, enforces a beauty bar, and runs mandatory Playwright verification so output is never broken or misaligned.
 ---
 
 # Showcase
@@ -18,11 +18,11 @@ This skill exists because LLM-generated HTML/SVG drifts in three predictable way
    - **Native-platform hint**: if subject mentions macOS / iOS / NSWindow / menu bar / popover / SwiftUI / AppKit, set `nativePlatform = "macos"` (or similar). This forces one variant to use the platform's HIG seed (see below) for accuracy.
    - If any of the above is genuinely ambiguous, ask one focused question. Do not ask if you can infer.
 
-2. **Pick design seeds** for visual uniqueness (see `## Design seeds`):
-   - Read `~/.claude/showcases/.seed-history.json` (create if missing) for recently-used seed names.
-   - Pick `N` seeds that (a) haven't been used in the last 5 invocations and (b) differ from each other on ≥3 orthogonal axes (palette, typography, density, mood, motif).
-   - If `nativePlatform` is set, force exactly one variant to use the platform seed (`apple-hig-macos`, etc.) regardless of history - accuracy to native chrome matters more than novelty for that variant.
-   - Append the picks to seed history immediately (so concurrent invocations don't collide).
+2. **Compose design seeds** for visual uniqueness (see `## Design seeds`):
+   - Read `~/.claude/showcases/.seed-history.json` (create if missing) for recently-used seeds and their axes.
+   - Compose `N` fresh seeds, each defining all five axes (palette, typography, density, mood, motif). They must (a) not closely repeat any seed from the last 5 invocations and (b) differ from each other on ≥3 of the five axes.
+   - If `nativePlatform` is set, one variant must use the platform's native direction (`apple-hig-macos`, etc.) regardless of novelty - accuracy to native chrome wins for that variant.
+   - Append the composed seeds (name + axes) to seed history immediately (so concurrent invocations don't collide).
 
 3. **Resolve output location**:
    - If invoked inside a git repo: `<repo-root>/.claude/showcases/<slug>-<YYYYMMDD-HHMMSS>/`
@@ -85,7 +85,21 @@ This skill exists because LLM-generated HTML/SVG drifts in three predictable way
 
 ## Design seeds
 
-Each seed is a (palette, typography, density, mood, motif) combination. Pick seeds that have not been used recently and that differ from each other within an invocation. Never use the same seed twice in one invocation.
+A **seed** is a complete visual direction defined across five axes: **palette, typography, density, mood, motif**. The skill does not choose from a closed list - it **composes a fresh seed for every variant**, so output stays novel invocation after invocation. The named directions below are inspiration and reference points, not a menu.
+
+Composing seeds:
+
+1. Read `~/.claude/showcases/.seed-history.json` (create if missing) for recently-used seeds and their axes.
+2. For each variant, compose a NEW seed by deciding all five axes. It must:
+   - differ from the other variants in this invocation on ≥3 of the five axes;
+   - not closely repeat any seed from the last 5 invocations - a fresh accent over the same palette + typography + mood is not a new seed;
+   - obey the `## Beauty bar` rules without exception.
+3. If `nativePlatform` is set, one variant must instead use the platform's native direction (e.g. the `apple-hig-macos` reference below) - fidelity to native chrome outranks novelty for that variant.
+4. Give each seed a short kebab-case name describing it (e.g. `quiet-grid-warm`, `mono-terminal`, `aurora-dark`), then append the name + its five axes to seed history before generating any HTML (so concurrent invocations don't collide).
+
+If the user explicitly requests a direction ("make it editorial", "in a brutalist style"), honor it for that variant and build the seed around it.
+
+### Reference directions (inspiration, not a closed set)
 
 | Seed                 | Palette                                                                                   | Typography                                                           | Density     | Mood                        | Notes                                                                                                                                                        |
 | -------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ----------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -100,14 +114,7 @@ Each seed is a (palette, typography, density, mood, motif) combination. Pick see
 | `risograph`          | Two-spot color (fluoro pink #FF48B0 + cool mint #5CDCC1) on cream                         | `Space Grotesk` heading + `Inter` body                               | Comfortable | Print, tactile              | Subtle grain overlay (1% noise SVG). Slight color misregistration on accents.                                                                                |
 | `tactile-paper`      | Kraft #E8DCC4, ink #2D241C, brick #A33D2A                                                 | `Source Serif Pro` + handwritten accent (`Caveat` for callouts only) | Comfortable | Warm, analog                | Paper-grain background SVG. Subtle deckle edges.                                                                                                             |
 
-Picking algorithm:
-
-1. Filter out seeds used in the last 5 invocations (from `.seed-history.json`).
-2. If `nativePlatform` is set, pin the matching native seed (e.g. `apple-hig-macos`) as variant 1.
-3. For remaining variants, pick seeds maximizing axis-distance: never pair `glassmorphism-dark` + `brutalist-grid` (both stark/sans/dense - too similar in mood despite color difference; prefer one stark + one warm + one soft).
-4. Persist picks before generating any HTML.
-
-If the user explicitly requests a seed ("make it editorial", "in a brutalist style"), honor that and skip rotation for that variant.
+Treat the directions above as starting points to combine, darken, warm, or depart from - not a checklist. Push for contrast between variants: pairing two stark/sans/dense directions (e.g. glassmorphism + brutalist) reads as similar despite different colors, so spread variants across the axes - one stark, one warm, one soft. What matters is that every variant is a deliberate, distinct, beauty-bar-compliant composition.
 
 ## Beauty bar (non-negotiable)
 
