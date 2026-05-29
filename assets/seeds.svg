@@ -1,9 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="880" height="158" viewBox="0 0 880 158" role="img" aria-label="The ten design seeds: apple-hig-macos, editorial-mono, brutalist-grid, soft-pastel, glassmorphism-dark, swiss-minimalist, newsprint, aurora-gradient, risograph, tactile-paper.">
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="236" viewBox="0 0 880 236" role="img" aria-label="Design seeds are composed fresh each run across five axes: palette, typography, density, mood, and motif.">
   <defs>
-    <linearGradient id="auroraS" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="auroraS" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#8b7cf6"/>
-      <stop offset="0.55" stop-color="#c98bf0"/>
-      <stop offset="1" stop-color="#f6a87c"/>
+      <stop offset="1" stop-color="#7fe7d0"/>
     </linearGradient>
     <radialGradient id="sheen3" cx="0.5" cy="-0.2" r="1.1">
       <stop offset="0" stop-color="#161c2a"/>
@@ -11,36 +10,62 @@
     </radialGradient>
   </defs>
 
-  <rect x="0" y="0" width="880" height="158" rx="18" fill="url(#sheen3)"/>
-  <rect x="0.5" y="0.5" width="879" height="157" rx="18" fill="none" stroke="#ffffff" stroke-opacity="0.09"/>
+  <rect x="0" y="0" width="880" height="236" rx="18" fill="url(#sheen3)"/>
+  <rect x="0.5" y="0.5" width="879" height="235" rx="18" fill="none" stroke="#ffffff" stroke-opacity="0.09"/>
 
   <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
-    <text x="36" y="30" font-size="11" font-weight="700" letter-spacing="2.4" fill="#6b7488">DESIGN SEEDS · EXAMPLE DIRECTIONS</text>
+    <text x="36" y="34" font-size="11" font-weight="700" letter-spacing="2.4" fill="#6b7488">DESIGN SEEDS · COMPOSED FRESH EACH RUN</text>
 
-    <g font-size="12" font-weight="500" fill="#c7cee0">
-      <!-- row 1 -->
-      <rect x="36"  y="61" width="26" height="26" rx="6" fill="#007AFF" stroke="#ffffff" stroke-opacity="0.16"/>
-      <text x="70"  y="78">apple-hig-macos</text>
-      <rect x="198" y="61" width="26" height="26" rx="6" fill="#C45A2C" stroke="#ffffff" stroke-opacity="0.16"/>
-      <text x="232" y="78">editorial-mono</text>
-      <rect x="360" y="61" width="26" height="26" rx="6" fill="#FF3D00" stroke="#ffffff" stroke-opacity="0.16"/>
-      <text x="394" y="78">brutalist-grid</text>
-      <rect x="522" y="61" width="26" height="26" rx="6" fill="#FFD6CC" stroke="#ffffff" stroke-opacity="0.16"/>
-      <text x="556" y="78">soft-pastel</text>
-      <rect x="684" y="61" width="26" height="26" rx="6" fill="#7C5CFF" stroke="#ffffff" stroke-opacity="0.16"/>
-      <text x="718" y="78">glassmorphism-dark</text>
+    <!-- axis labels -->
+    <g font-size="12" font-weight="700" letter-spacing="1.4" fill="#c7cee0">
+      <text x="36" y="70">PALETTE</text>
+      <text x="36" y="104">TYPE</text>
+      <text x="36" y="138">DENSITY</text>
+      <text x="36" y="172">MOOD</text>
+      <text x="36" y="206">MOTIF</text>
+    </g>
 
-      <!-- row 2 -->
-      <rect x="36"  y="107" width="26" height="26" rx="6" fill="#D62B17" stroke="#ffffff" stroke-opacity="0.16"/>
-      <text x="70"  y="124">swiss-minimalist</text>
-      <rect x="198" y="107" width="26" height="26" rx="6" fill="#B33A2E" stroke="#ffffff" stroke-opacity="0.16"/>
-      <text x="232" y="124">newsprint</text>
-      <rect x="360" y="107" width="26" height="26" rx="6" fill="url(#auroraS)" stroke="#ffffff" stroke-opacity="0.16"/>
-      <text x="394" y="124">aurora-gradient</text>
-      <rect x="522" y="107" width="26" height="26" rx="6" fill="#FF48B0" stroke="#ffffff" stroke-opacity="0.16"/>
-      <text x="556" y="124">risograph</text>
-      <rect x="684" y="107" width="26" height="26" rx="6" fill="#A33D2A" stroke="#ffffff" stroke-opacity="0.16"/>
-      <text x="718" y="124">tactile-paper</text>
+    <!-- PALETTE: diverse hue swatches (cy 66) -->
+    <g stroke="#ffffff" stroke-opacity="0.16">
+      <rect x="170" y="55" width="22" height="22" rx="5" fill="#007AFF"/>
+      <rect x="200" y="55" width="22" height="22" rx="5" fill="#C45A2C"/>
+      <rect x="230" y="55" width="22" height="22" rx="5" fill="#7C5CFF"/>
+      <rect x="260" y="55" width="22" height="22" rx="5" fill="#D62B17"/>
+      <rect x="290" y="55" width="22" height="22" rx="5" fill="#5CDCC1"/>
+      <rect x="320" y="55" width="22" height="22" rx="5" fill="url(#auroraS)"/>
+    </g>
+
+    <!-- TYPE: same letters, different typefaces (baseline 108) -->
+    <g fill="#e3e7f4">
+      <text x="170" y="108" font-size="22" font-family="ui-serif, 'New York', Georgia, serif">Aa</text>
+      <text x="222" y="108" font-size="22" font-family="system-ui, -apple-system, sans-serif">Aa</text>
+      <text x="274" y="108" font-size="22" font-family="ui-monospace, Menlo, monospace">Aa</text>
+      <text x="328" y="108" font-size="22" font-weight="800" font-family="system-ui, -apple-system, sans-serif">Aa</text>
+    </g>
+
+    <!-- DENSITY: increasing-width bars (cy 134) -->
+    <g fill="#a78bf0">
+      <rect x="170" y="123" width="3"  height="22" rx="1.5"/>
+      <rect x="188" y="123" width="5"  height="22" rx="1.5"/>
+      <rect x="206" y="123" width="7"  height="22" rx="1.5"/>
+      <rect x="224" y="123" width="9"  height="22" rx="1.5"/>
+      <rect x="242" y="123" width="12" height="22" rx="1.5"/>
+    </g>
+
+    <!-- MOOD: descriptor words (baseline 176) -->
+    <text x="170" y="176" font-size="13" fill="#9aa4b6">calm&#160;&#160;·&#160;&#160;stark&#160;&#160;·&#160;&#160;warm&#160;&#160;·&#160;&#160;editorial&#160;&#160;·&#160;&#160;playful</text>
+
+    <!-- MOTIF: varied marks (cy 202) -->
+    <g>
+      <path d="M178 194 L186 202 L178 210 L170 202 Z" fill="#8b7cf6"/>
+      <circle cx="216" cy="202" r="8" fill="none" stroke="#7fe7d0" stroke-width="2"/>
+      <path d="M254 194 L262 210 L246 210 Z" fill="#f6a87c"/>
+      <g stroke="#c98bf0" stroke-width="1.6" fill="none">
+        <rect x="284" y="194" width="16" height="16" rx="2"/>
+        <line x1="292" y1="194" x2="292" y2="210"/>
+        <line x1="284" y1="202" x2="300" y2="202"/>
+      </g>
+      <path d="M330 192 L332.4 199.6 L340 202 L332.4 204.4 L330 212 L327.6 204.4 L320 202 L327.6 199.6 Z" fill="#e6a0c4"/>
     </g>
   </g>
 </svg>

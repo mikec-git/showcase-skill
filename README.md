@@ -51,13 +51,13 @@ The skill addresses each structurally: Playwright checks for (1), fresh per-vari
 
 <div align="center">
 
-<img src="assets/seeds.svg" alt="Example design directions: apple-hig-macos, editorial-mono, brutalist-grid, soft-pastel, glassmorphism-dark, swiss-minimalist, newsprint, aurora-gradient, risograph, tactile-paper" width="880">
+<img src="assets/seeds.svg" alt="The five seed axes — palette, typography, density, mood, motif — composed fresh each run" width="880">
 
 </div>
 
-A **seed** is a complete visual direction defined across five axes: palette, typography, density, mood, and motif. The skill does not pick from a closed list - it **composes a fresh seed for every variant**, so two invocations rarely look alike. The directions above (native macOS HIG, editorial, brutalist grid, soft pastel, glassmorphism, Swiss minimalist, newsprint, aurora gradient, risograph, tactile paper) are inspiration and reference points, not a menu. Within an invocation, every variant differs from the others on at least three of the five axes.
+A **seed** is a complete visual direction composed across the five axes above - palette, typography, density, mood, and motif. The skill does not pick from a closed list; it **composes a fresh seed for every variant**, so two invocations rarely look alike. Within an invocation, each variant differs from the others on at least three of the five axes.
 
-See [`skills/showcase/SKILL.md`](skills/showcase/SKILL.md) for the seed-composition procedure and the full reference catalog.
+See [`skills/showcase/SKILL.md`](skills/showcase/SKILL.md) for the composition procedure and a catalog of example directions for inspiration.
 
 ## Dependencies
 
