@@ -4,6 +4,11 @@ set -euo pipefail
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 skill_dir="$repo_dir/skills/showcase"
 
+if [[ ! -d "$skill_dir" ]]; then
+  echo "Missing $skill_dir - run install.sh from a full checkout of the repository." >&2
+  exit 1
+fi
+
 codex_skills_dir="${CODEX_SKILLS_DIR:-${CODEX_HOME:-$HOME/.codex}/skills}"
 claude_skills_dir="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
 

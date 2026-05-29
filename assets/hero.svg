@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="300" viewBox="0 0 880 300" role="img" aria-label="Showcase — Render, Serve, Verify. Browser-verified design mockups for Codex and Claude, generated on demand.">
+  <defs>
+    <linearGradient id="aurora" x1="0" y1="0" x2="1" y2="0.25">
+      <stop offset="0" stop-color="#8b7cf6"/>
+      <stop offset="0.38" stop-color="#c98bf0"/>
+      <stop offset="0.72" stop-color="#f6a87c"/>
+      <stop offset="1" stop-color="#7fe7d0"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.16" cy="0" r="0.95">
+      <stop offset="0" stop-color="#1b2030"/>
+      <stop offset="0.62" stop-color="#0b0e14"/>
+    </radialGradient>
+    <clipPath id="card"><rect x="0" y="0" width="880" height="300" rx="18"/></clipPath>
+    <filter id="glow" x="-30%" y="-80%" width="160%" height="260%">
+      <feGaussianBlur stdDeviation="56"/>
+    </filter>
+  </defs>
+
+  <g clip-path="url(#card)">
+    <rect x="0" y="0" width="880" height="300" fill="url(#sheen)"/>
+    <ellipse cx="300" cy="-24" rx="430" ry="150" fill="url(#aurora)" opacity="0.32" filter="url(#glow)"/>
+    <rect x="0.5" y="0.5" width="879" height="299" rx="18" fill="none" stroke="#ffffff" stroke-opacity="0.10"/>
+  </g>
+
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <text x="46" y="122" font-size="66" font-weight="800" letter-spacing="-1.6" fill="url(#aurora)">Showcase</text>
+    <text x="49" y="158" font-size="13" font-weight="600" letter-spacing="3.6" fill="#c7cee0">RENDER&#160;&#160;·&#160;&#160;SERVE&#160;&#160;·&#160;&#160;VERIFY</text>
+    <text x="49" y="192" font-size="16" fill="#9aa4b6">Browser-verified design mockups for Codex &amp; Claude, generated on demand.</text>
+  </g>
+
+  <g stroke="#ffffff" stroke-opacity="0.16">
+    <rect x="48"  y="232" width="24" height="24" rx="6" fill="#007AFF"/>
+    <rect x="81"  y="232" width="24" height="24" rx="6" fill="#C45A2C"/>
+    <rect x="114" y="232" width="24" height="24" rx="6" fill="#FF3D00"/>
+    <rect x="147" y="232" width="24" height="24" rx="6" fill="#FFD6CC"/>
+    <rect x="180" y="232" width="24" height="24" rx="6" fill="#7C5CFF"/>
+    <rect x="213" y="232" width="24" height="24" rx="6" fill="#D62B17"/>
+    <rect x="246" y="232" width="24" height="24" rx="6" fill="#B33A2E"/>
+    <rect x="279" y="232" width="24" height="24" rx="6" fill="#B79CED"/>
+    <rect x="312" y="232" width="24" height="24" rx="6" fill="#FF48B0"/>
+    <rect x="345" y="232" width="24" height="24" rx="6" fill="#A33D2A"/>
+  </g>
+</svg>

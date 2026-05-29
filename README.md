@@ -1,4 +1,6 @@
-# Showcase Skill
+<div align="center">
+
+<img src="assets/hero.svg" alt="Showcase — Render · Serve · Verify" width="880">
 
 [![Codex Skill](https://img.shields.io/badge/Codex-skill-111827?style=flat-square)](https://github.com/mikec-git/showcase-skill)
 [![Claude Skill](https://img.shields.io/badge/Claude-skill-D97706?style=flat-square)](https://github.com/mikec-git/showcase-skill)
@@ -6,24 +8,34 @@
 [![Verification](https://img.shields.io/badge/verification-Playwright_MCP-059669?style=flat-square)](#why-the-verification-loop-exists)
 [![Last Commit](https://img.shields.io/github/last-commit/mikec-git/showcase-skill?style=flat-square)](https://github.com/mikec-git/showcase-skill/commits/main)
 
+**Browser-verified design mockups for Codex &amp; Claude, generated on demand.**
+
+</div>
+
 A shared Codex and Claude skill for rendering HTML/SVG mockups, slideshows, demos, and before/after comparisons, serving them on localhost for preview, and verifying them in a real browser before the user sees them.
 
 This repository is the single source of truth for both Codex and Claude. Runtime skill paths should symlink back to `skills/showcase` instead of keeping separate copies.
 
-## What It Does
+## How It Works
 
-- Parses intent from a free-text prompt: artifact type (`mockup`, `slides`, `demo`, `before-after`, `landing`), subject, variant count, native-platform hint.
-- Picks rotating design seeds from a 10-seed catalog so output is visually distinct invocation-to-invocation. Tracks recent picks in `~/.claude/showcases/.seed-history.json`.
-- Pins the matching platform seed (e.g. `apple-hig-macos`) when the subject is native UI, so accuracy to platform chrome is never sacrificed for novelty.
-- Generates a self-contained artifact tree per variant (HTML/CSS/SVG, optional JS), with a designed overview page when N > 1.
-- Serves on the first free port `>= 3001` via `python3 -m http.server`, recorded in `manifest.json`.
-- **Mandatory verification loop** (max 3 fix passes per variant) using Playwright MCP tools:
+<div align="center">
+
+<img src="assets/pipeline.svg" alt="Pipeline: Prompt → Seeds → Generate → Serve → Verify (fix & re-verify, max 3 passes) → Open" width="880">
+
+</div>
+
+- **Parse intent** from a free-text prompt: artifact type (`mockup`, `slides`, `demo`, `before-after`, `landing`), subject, variant count, native-platform hint.
+- **Compose seeds** fresh for each variant from five axes (palette, typography, density, mood, motif), so output stays visually distinct invocation-to-invocation. Recent seeds are tracked in `~/.claude/showcases/.seed-history.json` to avoid repeats.
+- **Pin the platform direction** (e.g. `apple-hig-macos`) when the subject is native UI, so accuracy to platform chrome is never sacrificed for novelty.
+- **Generate** a self-contained artifact tree per variant (HTML/CSS/SVG, optional JS), with a designed overview page when N&nbsp;>&nbsp;1.
+- **Serve** on the first free port `>= 3001` via `python3 -m http.server`, recorded in `manifest.json`.
+- **Verify** in a real browser (mandatory loop, max 3 fix passes per variant) using Playwright MCP tools:
   - Console must be error-free.
   - No horizontal overflow, no zero-size load-bearing elements, all images loaded, fonts loaded.
   - WCAG AA contrast (>= 4.5:1) on every text checkpoint.
   - Screenshot at target viewports for visual sanity.
-- Opens the result in the user's default browser only after every variant passes verification.
-- Reports the localhost URL, per-variant differentiators, output path, and a stop-server command.
+- **Open** the result in the user's default browser only after every variant passes verification.
+- **Report** the localhost URL, per-variant differentiators, output path, and a stop-server command.
 
 ## Why The Verification Loop Exists
 
@@ -33,24 +45,30 @@ LLM-generated HTML drifts in three predictable ways:
 2. Converges to the same visual tropes invocation after invocation.
 3. Settles for "fine" instead of "considered".
 
-The skill addresses each structurally: Playwright checks for (1), seed rotation + 3-axis differentiation within a session for (2), and a hardcoded beauty bar (typography pair, 4/8/12/16/24/32/48 spacing scale, max 4 font sizes per surface, max one gradient per page, no emoji-as-icon, real icon sets) for (3).
+The skill addresses each structurally: Playwright checks for (1), fresh per-variant seeds + 3-axis differentiation within a session for (2), and a hardcoded beauty bar (typography pair, 4/8/12/16/24/32/48 spacing scale, max 4 font sizes per surface, max one gradient per page, no emoji-as-icon, real icon sets) for (3).
 
 ## Design Seeds
 
-Ten directions covering native macOS HIG, editorial, brutalist grid, soft pastel, glassmorphism, Swiss minimalist, newsprint, aurora gradient, risograph, and tactile paper. Within an invocation, every variant differs from the others on at least three of {palette, typography, density, mood, motif}.
+<div align="center">
 
-See `skills/showcase/SKILL.md` for the full catalog and selection algorithm.
+<img src="assets/seeds.svg" alt="Example design directions: apple-hig-macos, editorial-mono, brutalist-grid, soft-pastel, glassmorphism-dark, swiss-minimalist, newsprint, aurora-gradient, risograph, tactile-paper" width="880">
+
+</div>
+
+A **seed** is a complete visual direction defined across five axes: palette, typography, density, mood, and motif. The skill does not pick from a closed list - it **composes a fresh seed for every variant**, so two invocations rarely look alike. The directions above (native macOS HIG, editorial, brutalist grid, soft pastel, glassmorphism, Swiss minimalist, newsprint, aurora gradient, risograph, tactile paper) are inspiration and reference points, not a menu. Within an invocation, every variant differs from the others on at least three of the five axes.
+
+See [`skills/showcase/SKILL.md`](skills/showcase/SKILL.md) for the seed-composition procedure and the full reference catalog.
 
 ## Dependencies
 
-Required for normal use:
+**Required for normal use**
 
 - `python3` (for the local static server)
 - Playwright MCP server configured in the agent host (so the verifier can drive a real browser)
 - Codex with skill loading from `$CODEX_HOME/skills` or `~/.codex/skills`
 - Claude with skill loading from `~/.claude/skills`
 
-Optional:
+**Optional**
 
 - `gh`, only if you want to publish this repository through GitHub CLI.
 
@@ -82,9 +100,12 @@ In Codex or Claude, ask for the skill by name or use the slash form:
 /showcase the macOS menu bar popover with Today/Tomorrow groups
 ```
 
-The skill infers artifact type, picks seeds, generates files into `<project>/.claude/showcases/<slug>-<timestamp>/`, serves on a free port, runs the verification loop, and opens the result in the default browser.
+The skill infers artifact type, composes seeds, generates files into `<project>/.claude/showcases/<slug>-<timestamp>/`, serves on a free port, runs the verification loop, and opens the result in the default browser.
 
-## Output Layout
+<details>
+<summary><strong>Output layout, server lifecycle &amp; repository structure</strong></summary>
+
+### Output Layout
 
 ```text
 <project-root-or-home>/.claude/showcases/<slug>-<timestamp>/
@@ -99,7 +120,7 @@ The skill infers artifact type, picks seeds, generates files into `<project>/.cl
 
 The output directory should be gitignored (`.claude/showcases/`). The install script does not touch project gitignores; add the entry per project.
 
-## Stopping The Server
+### Stopping The Server
 
 The final report includes:
 
@@ -109,16 +130,19 @@ lsof -ti tcp:<port> | xargs kill
 
 Servers are not auto-stopped; the user can leave them running for review and clean up later.
 
-## Repository Layout
+### Repository Layout
 
 ```text
 install.sh                 Symlink installer for Codex and Claude.
+assets/                    README artwork (hero, pipeline, seed strip).
 skills/showcase/
-  SKILL.md                 Main shared skill instructions, including seed catalog and verification spec.
+  SKILL.md                 Main shared skill instructions, including the seed-composition procedure and verification spec.
 ```
+
+</details>
 
 ## Current Limitations
 
 - Verification depends on a Playwright MCP server being available in the agent host. Without it, the skill falls back to static checks and tells the user runtime verification was skipped.
 - Output is static HTML by default. Interactive demos can include `script.js` but the skill is not opinionated about SPA frameworks.
-- The seed catalog is fixed at 10 directions; uniqueness within long-running projects depends on the rotation window (last 5).
+- Seed novelty depends on the rotation window (last 5 invocations); over very long-running projects, distinct-but-similar directions can still recur.

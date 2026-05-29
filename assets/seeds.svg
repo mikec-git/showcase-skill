@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="158" viewBox="0 0 880 158" role="img" aria-label="The ten design seeds: apple-hig-macos, editorial-mono, brutalist-grid, soft-pastel, glassmorphism-dark, swiss-minimalist, newsprint, aurora-gradient, risograph, tactile-paper.">
+  <defs>
+    <linearGradient id="auroraS" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8b7cf6"/>
+      <stop offset="0.55" stop-color="#c98bf0"/>
+      <stop offset="1" stop-color="#f6a87c"/>
+    </linearGradient>
+    <radialGradient id="sheen3" cx="0.5" cy="-0.2" r="1.1">
+      <stop offset="0" stop-color="#161c2a"/>
+      <stop offset="0.75" stop-color="#0b0e14"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="0" y="0" width="880" height="158" rx="18" fill="url(#sheen3)"/>
+  <rect x="0.5" y="0.5" width="879" height="157" rx="18" fill="none" stroke="#ffffff" stroke-opacity="0.09"/>
+
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <text x="36" y="30" font-size="11" font-weight="700" letter-spacing="2.4" fill="#6b7488">DESIGN SEEDS · EXAMPLE DIRECTIONS</text>
+
+    <g font-size="12" font-weight="500" fill="#c7cee0">
+      <!-- row 1 -->
+      <rect x="36"  y="61" width="26" height="26" rx="6" fill="#007AFF" stroke="#ffffff" stroke-opacity="0.16"/>
+      <text x="70"  y="78">apple-hig-macos</text>
+      <rect x="198" y="61" width="26" height="26" rx="6" fill="#C45A2C" stroke="#ffffff" stroke-opacity="0.16"/>
+      <text x="232" y="78">editorial-mono</text>
+      <rect x="360" y="61" width="26" height="26" rx="6" fill="#FF3D00" stroke="#ffffff" stroke-opacity="0.16"/>
+      <text x="394" y="78">brutalist-grid</text>
+      <rect x="522" y="61" width="26" height="26" rx="6" fill="#FFD6CC" stroke="#ffffff" stroke-opacity="0.16"/>
+      <text x="556" y="78">soft-pastel</text>
+      <rect x="684" y="61" width="26" height="26" rx="6" fill="#7C5CFF" stroke="#ffffff" stroke-opacity="0.16"/>
+      <text x="718" y="78">glassmorphism-dark</text>
+
+      <!-- row 2 -->
+      <rect x="36"  y="107" width="26" height="26" rx="6" fill="#D62B17" stroke="#ffffff" stroke-opacity="0.16"/>
+      <text x="70"  y="124">swiss-minimalist</text>
+      <rect x="198" y="107" width="26" height="26" rx="6" fill="#B33A2E" stroke="#ffffff" stroke-opacity="0.16"/>
+      <text x="232" y="124">newsprint</text>
+      <rect x="360" y="107" width="26" height="26" rx="6" fill="url(#auroraS)" stroke="#ffffff" stroke-opacity="0.16"/>
+      <text x="394" y="124">aurora-gradient</text>
+      <rect x="522" y="107" width="26" height="26" rx="6" fill="#FF48B0" stroke="#ffffff" stroke-opacity="0.16"/>
+      <text x="556" y="124">risograph</text>
+      <rect x="684" y="107" width="26" height="26" rx="6" fill="#A33D2A" stroke="#ffffff" stroke-opacity="0.16"/>
+      <text x="718" y="124">tactile-paper</text>
+    </g>
+  </g>
+</svg>
