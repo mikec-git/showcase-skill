@@ -1,5 +1,11 @@
 # Showcase Skill
 
+[![Codex Skill](https://img.shields.io/badge/Codex-skill-111827?style=flat-square)](https://github.com/mikec-git/showcase-skill)
+[![Claude Skill](https://img.shields.io/badge/Claude-skill-D97706?style=flat-square)](https://github.com/mikec-git/showcase-skill)
+[![Install](https://img.shields.io/badge/install-symlink_script-2563EB?style=flat-square)](#installation)
+[![Verification](https://img.shields.io/badge/verification-Playwright_MCP-059669?style=flat-square)](#why-the-verification-loop-exists)
+[![Last Commit](https://img.shields.io/github/last-commit/mikec-git/showcase-skill?style=flat-square)](https://github.com/mikec-git/showcase-skill/commits/main)
+
 A shared Codex and Claude skill for rendering HTML/SVG mockups, slideshows, demos, and before/after comparisons, serving them on localhost for preview, and verifying them in a real browser before the user sees them.
 
 This repository is the single source of truth for both Codex and Claude. Runtime skill paths should symlink back to `skills/showcase` instead of keeping separate copies.
