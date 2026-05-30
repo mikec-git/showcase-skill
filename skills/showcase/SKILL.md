@@ -18,21 +18,28 @@ This skill exists because LLM-generated HTML/SVG drifts in three predictable way
    - **Native-platform hint**: if subject mentions macOS / iOS / NSWindow / menu bar / popover / SwiftUI / AppKit, set `nativePlatform = "macos"` (or similar). This forces one variant to use the platform's HIG seed (see below) for accuracy.
    - **Publish intent**: only set `publish = true` when the user explicitly asks for a public/shared/published link. Never publish by default.
    - **Publish retention**: when publishing, infer `temp` if the user says temporary, expiring, for N days, share for review, or similar. Infer `persistent` if the user says permanent, keep, portfolio, archive, or similar. If publishing is requested and retention is not inferable, ask whether it should be temporary or persistent. Default temporary duration = 7 days when the user does not specify N.
-   - If any of the above is genuinely ambiguous, ask one focused question. Do not ask if you can infer.
+   - If any of the above is genuinely ambiguous, ask one focused question. Do not ask if you can infer. **Style is the exception - never infer it; capture it in step 2.**
 
-2. **Compose design seeds** for visual uniqueness (see `## Design seeds`):
+2. **Style intake** - capture the visual direction before composing seeds, so style is a decision, not a guess:
+   - **Skip (ask nothing)** when the direction is already pinned: the user named an aesthetic / brand / colors / fonts, pasted or linked a reference, opted out ("surprise me", "you pick", "whatever looks best"), this is a trivial re-render of a prior showcase (reuse `styleIntake` from its `manifest.json`), or `nativePlatform` is set with no other direction.
+   - **Otherwise ask once** (never block; silence or refusal defaults to "surprise me"). Phrase it tool-agnostically: if your interface has a multiple-choice control, present the options as selectable items; otherwise ask in plain text as a short numbered menu accepting a number, a name, or free-text adjectives.
+     - **Q1 - direction** (pick one): `Editorial` (`editorial-mono`) · `Brutalist` (`brutalist-grid`) · `Swiss minimalist` (`swiss-minimalist`) · `Soft pastel` (`soft-pastel`) · `Glass dark` (`glassmorphism-dark`) · `Newsprint` (`newsprint`) · `Match a reference` (emulate a site / screenshot / brand / product) · `Surprise me` (you pick) · `Other` (describe in 2-3 adjectives; also covers `aurora-gradient`, `risograph`, `tactile-paper`).
+     - **Q2 - reference** (only when Q1 = `Match a reference`): ask for a URL, a screenshot/image, brand colors, 2-3 adjectives, or a named product (Linear / Notion / Stripe). Emulate the _feel_, never copy or clone assets.
+   - **Record** the answer in `manifest.json` under `styleIntake`: `{ askedAt, direction, namedSeed, reference: { url, imagePath, brandColors, adjectives, product }, freeText }`. For a `url`, keep the link and optionally screenshot it to read palette/type/density - do not scrape or clone. Save any reference image under `<output-dir>/refs/` and never ship it. This binds the seed axes in step 3 (see `## Design seeds` → Style intake → seed axes).
+
+3. **Compose design seeds** for visual uniqueness (see `## Design seeds`):
    - Read `~/.claude/showcases/.seed-history.json` (create if missing) for recently-used seeds and their axes.
    - Compose `N` fresh seeds, each defining all five axes (palette, typography, density, mood, motif). They must (a) not closely repeat any seed from the last 5 invocations and (b) differ from each other on ≥3 of the five axes.
    - If `nativePlatform` is set, one variant must use the platform's native direction (`apple-hig-macos`, etc.) regardless of novelty - accuracy to native chrome wins for that variant.
    - Append the composed seeds (name + axes) to seed history immediately (so concurrent invocations don't collide).
 
-3. **Resolve output location**:
+4. **Resolve output location**:
    - If invoked inside a git repo: `<repo-root>/.claude/showcases/<slug>-<YYYYMMDD-HHMMSS>/`
    - Else: `~/.claude/showcases/<slug>-<YYYYMMDD-HHMMSS>/`
    - `<slug>` is a kebab-case 2-4-word derivation of the subject.
    - Ensure `.claude/showcases/` is in `.gitignore`; add it if missing.
 
-4. **Generate the artifact tree**:
+5. **Generate the artifact tree**:
 
    ```
    <output-dir>/
@@ -53,12 +60,12 @@ This skill exists because LLM-generated HTML/SVG drifts in three predictable way
    - Add a short `interactions` array to `manifest.json` listing each user-facing control and the expected observable result, so verification has a concrete checklist.
    - Use the **beauty bar** rules (see below) for every page.
 
-5. **Serve on localhost** (background):
+6. **Serve on localhost** (background):
    - Find first free TCP port `>= 3001` (skip 3000; reserved for primary repo dev server).
    - `cd <output-dir> && python3 -m http.server <port> --bind 127.0.0.1` run in background via `Bash(run_in_background: true)`.
    - Write the chosen port into `manifest.json`.
 
-6. **Verify (MANDATORY loop, max 3 fix passes per variant)** - this is the accuracy gate:
+7. **Verify (MANDATORY loop, max 3 fix passes per variant)** - this is the accuracy gate:
    For each variant URL:
    1. `mcp__playwright__browser_navigate` to the variant URL.
    2. `mcp__playwright__browser_console_messages` - must be empty (or only deprecation notices). Errors = fix.
@@ -79,14 +86,14 @@ This skill exists because LLM-generated HTML/SVG drifts in three predictable way
       - For `slides`: 1920×1080.
       - For `landing`: 1440×900, plus 390×844 mobile.
       - For `before-after`: side-by-side viewport.
-   7. **Inspect the screenshot yourself.** Look for: text clipped at edges, overlapping elements, broken layouts, low-contrast text, asymmetric padding, generic-looking output. If any present → fix and re-verify.
+   7. **Inspect the screenshot yourself** for _broken_ output: text clipped at edges, overlapping elements, broken layouts, low-contrast text, asymmetric padding. If any present → fix and re-verify. The checks script and this pass are the **not-broken** bar only - a clean page can still be generic. So before any variant passes, run the **anti-generic gate** (the real quality bar): answer in writing - (1) could this be _any_ company, no point of view? (2) centered hero + equal-card grid? (3) default purple / violet or blue-gradient primary? (4) flat hierarchy, nothing is loudest? (5) default friendly-SaaS corners + drop-shadow soup? (6) one neutral sans at default weights throughout? **2+ "yes" = FAIL** → regenerate that variant from a _different_ reference (see `## Beauty bar` → Avoid the AI-default look); do not just patch.
 
    If a variant fails 3 fix passes, surface it to the user with the screenshot and ask whether to regenerate with a different seed or accept the issue.
 
-7. **Open in default browser** (only after all variants pass verification):
+8. **Open in default browser** (only after all variants pass verification):
    - `open http://127.0.0.1:<port>` so the user sees it immediately.
 
-8. **Optionally publish a shareable URL** (only when `publish = true`):
+9. **Optionally publish a shareable URL** (only when `publish = true`):
    - Treat publishing as public internet exposure. Before publishing, confirm there are no secrets, credentials, private customer data, local machine identifiers, or sensitive real user data in the output.
    - Use `scripts/showcase_publish.py` from this skill directory for setup, publishing, listing, and cleanup. The config path is `$SHOWCASE_PUBLISH_CONFIG` when set, otherwise `~/.config/showcase-skill/publish.json`.
    - On publish-flow startup, if a publish config exists, run:
@@ -146,14 +153,14 @@ This skill exists because LLM-generated HTML/SVG drifts in three predictable way
    - Temporary showcases remain live until cleanup removes them. The helper records `expires_at`; the optional cleanup workflow removes expired temp folders daily, and the skill also offers cleanup at the start of each publish flow.
    - On publish-flow teardown, if expired temporary showcases remain and cleanup was not already offered at startup, ask whether to clean them up before the final report. Do not block the final report when the user says no.
 
-9. **Report** back with:
-   - The localhost URL.
-   - The public URL when publishing was requested.
-   - One line per variant: seed name + the 3-axis differentiation tags (palette / typography / mood).
-   - Inline screenshots if available via the tool surface.
-   - Path to the output directory.
-   - For temporary public links: the expiry date and cleanup command.
-   - A note that the server is running in the background and how to stop it (`lsof -ti tcp:<port> | xargs kill`).
+10. **Report** back with:
+    - The localhost URL.
+    - The public URL when publishing was requested.
+    - One line per variant: seed name + the 3-axis differentiation tags (palette / typography / mood).
+    - Inline screenshots if available via the tool surface.
+    - Path to the output directory.
+    - For temporary public links: the expiry date and cleanup command.
+    - A note that the server is running in the background and how to stop it (`lsof -ti tcp:<port> | xargs kill`).
 
 ## Design seeds
 
@@ -169,9 +176,23 @@ Composing seeds:
 3. If `nativePlatform` is set, one variant must instead use the platform's native direction (e.g. the `apple-hig-macos` reference below) - fidelity to native chrome outranks novelty for that variant.
 4. Give each seed a short kebab-case name describing it (e.g. `quiet-grid-warm`, `mono-terminal`, `aurora-dark`), then append the name + its five axes to seed history before generating any HTML (so concurrent invocations don't collide).
 
-If the user explicitly requests a direction ("make it editorial", "in a brutalist style"), honor it for that variant and build the seed around it.
+If the user explicitly requests a direction ("make it editorial", "in a brutalist style"), honor it for that variant and build the seed around it. If the **Style intake** step (workflow step 2) captured a direction in `manifest.json` → `styleIntake`, treat it as a **binding constraint** for the relevant variant(s) and map it per the subsection below.
+
+### Style intake → seed axes
+
+Map the captured `styleIntake` answer onto the five axes:
+
+- **Named direction** (Editorial, Brutalist, ...): seed at least one variant from its row in Reference directions across all five axes; other variants still vary ≥3 axes. If the user wants a single consistent look, honor it for every variant.
+- **Surprise me / you pick**: no external constraint - compose fresh, fully-committed seeds (no last-5 repeat; spread one stark / one warm / one soft).
+- **Match a reference**: derive **palette** from the reference's brand / dominant colors (3-5, contrast-safe), **typography** from its serif-vs-sans + weight (mapped to a real font), **density** from its spacing, **mood** from its tone, **motif** from one device it uses, used once. Emulate the feel; never copy assets.
+- **Free-text adjectives**: warm / analog → warm + serif + grain (`tactile-paper`); technical / terminal → mono + dense + dark; premium / quiet → restrained + generous + subtle; playful → pastel / riso + rounded.
+- `nativePlatform` pins one variant to `apple-hig-macos`; the captured direction applies to the remaining variant(s).
+
+Every resulting seed still obeys the `## Beauty bar` and the ≥3-axis differentiation rule.
 
 ### Reference directions (inspiration, not a closed set)
+
+> These rows are **anchors to depart from, not a menu.** Several - `glassmorphism-dark`'s #7C5CFF, `aurora-gradient`'s lavender→peach, `soft-pastel` - are recognizable AI-default looks; do not use them verbatim unless the user explicitly asked. Depart from any single row on ≥2 axes.
 
 | Seed                 | Palette                                                                                   | Typography                                                           | Density     | Mood                        | Notes                                                                                                                                                        |
 | -------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ----------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -186,11 +207,26 @@ If the user explicitly requests a direction ("make it editorial", "in a brutalis
 | `risograph`          | Two-spot color (fluoro pink #FF48B0 + cool mint #5CDCC1) on cream                         | `Space Grotesk` heading + `Inter` body                               | Comfortable | Print, tactile              | Subtle grain overlay (1% noise SVG). Slight color misregistration on accents.                                                                                |
 | `tactile-paper`      | Kraft #E8DCC4, ink #2D241C, brick #A33D2A                                                 | `Source Serif Pro` + handwritten accent (`Caveat` for callouts only) | Comfortable | Warm, analog                | Paper-grain background SVG. Subtle deckle edges.                                                                                                             |
 
-Treat the directions above as starting points to combine, darken, warm, or depart from - not a checklist. Push for contrast between variants: pairing two stark/sans/dense directions (e.g. glassmorphism + brutalist) reads as similar despite different colors, so spread variants across the axes - one stark, one warm, one soft. What matters is that every variant is a deliberate, distinct, beauty-bar-compliant composition.
+Treat the directions above as starting points to combine, darken, warm, or depart from - not a checklist. Push for contrast between variants: pairing two stark/sans/dense directions (e.g. glassmorphism + brutalist) reads as similar despite different colors, so spread variants across the axes - one stark, one warm, one soft. What matters is that every variant is a deliberate, distinct, beauty-bar-compliant composition. Picking a row unchanged may pass the novelty check on a first invocation but still **fails the anti-generic gate** (see Beauty bar → Avoid the AI-default look) - commit and depart.
 
 ## Beauty bar (non-negotiable)
 
-Every page must obey these. The verification loop looks for violations.
+Every page must obey these. The **Avoid the AI-default look** rules below are the _taste_ gate - the correctness rules under them are necessary but not sufficient. The verification loop looks for violations.
+
+**Avoid the AI-default look** (the taste gate)
+
+- **Style is never "inferable."** Anchor every surface to a concrete reference - a prompt-named aesthetic or the captured Style intake - before composing. Never silently fall back to a generic style.
+- **Banned defaults unless explicitly asked**: violet / indigo / purple primaries or `#6366f1`→`#8b5cf6` / `#7C5CFF` gradients; lavender→peach or blue→purple hero gradients; glassmorphism blur as the main motif; centered-hero + three-equal-feature-cards; three-equal-pricing-card rows; emoji icons (esp. rocket / lightning / sparkles); Inter-on-everything at default weights.
+- **One focal point per surface**, obvious at a squint: the hero headline is the loudest element (clamp ~3-4.5rem, line-height ~1.05, tracking ~-0.02em); everything else recedes in size / weight / opacity. Max two emphasis levels. Reject evenly-weighted card grids unless the content is a genuinely uniform list.
+- **Color as punctuation**: ~90% neutral surfaces, ONE accent reserved for the single most important action. No gradient on buttons or text; any gradient is tonal (two adjacent values of one hue) and used once.
+- **Don't center the whole page**: a real grid (max-width ~1200-1280px) with a strong left spine; body copy left-aligned at 60-75ch; center only short symmetric moments. Replace equal feature cards with tiles sized by importance (bento / asymmetric).
+- **Restraint over decoration**: each ornament (motif / grain / gradient / blur) appears at most once per surface and must earn its place - default to removing it. Keep one region of intentional empty space. Backgrounds = a solid surface, a subtle texture (<6% opacity), or one tonal wash; never blobs or mesh orbs.
+- **Glassmorphism on at most ONE element**, only with real content behind it; otherwise opaque surfaces with a 3-level elevation model (base / raised / overlay).
+- **Shadows only on elevated elements** (raised cards, dropdowns, detached sticky nav): a two-part contact + ambient shadow tinted toward the surface hue, never identical pure-black soft shadows everywhere. Separate flat surfaces with a hairline border + spacing instead.
+- **One real type decision**: a characterful headline face + neutral body, or one family across its weight range with strong contrast (800 vs 400). Tune tracking, line-height, measure, tabular-nums. Never the default at default settings. Banned seed descriptors: "modern", "clean", "premium", "sleek", "minimal", "elegant" - name a specific real-world reference instead.
+- **Real content only** - never lorem ipsum or placeholder orbs: a real or mocked screenshot, a true diagram, or typography-as-art. Banned copy: "seamlessly", "effortlessly", "supercharge", "unlock", "empower", "revolutionize", "game-changing", "the power of", rule-of-three filler. Lead with a concrete claim using real nouns / numbers; subheads add information, not synonyms. Rewrite anything that could paste onto a competitor unchanged.
+- **Novelty is a tiebreaker, not the goal**: each variant must first be coherent and fully committed - the ≥3-axis rule applies only after coherence. A variant that hits the axis count but feels arbitrary FAILS. Prefer 1-2 excellent committed directions over N differently-mediocre ones.
+- **Litmus test (per variant)**: name its single focal point, its single accent use, its single type idea, and one deliberate asymmetry. Any answer of "everything" or "the default" means it's slop - redo it.
 
 **Typography**
 
@@ -324,7 +360,7 @@ The checks script (passed to `browser_evaluate`):
 ## Guardrails
 
 - Do not call this skill from inside another skill that has its own browser flow (avoid double-launching browsers).
-- If the user only wants the HTML files (no server), they will say so - skip step 5 and 7.
+- If the user only wants the HTML files (no server), they will say so - skip step 6 and 8.
 - If the user asks to publish without a configured publishing repo, ask for setup choices before creating any GitHub repo or remote.
 - If the publishing repo has uncommitted changes, stop and explain that it must be clean before publishing or cleanup.
 - If Playwright is unavailable, fall back to static analysis (HTML parse, CSS link check, image existence) and clearly tell the user that runtime verification was skipped.
