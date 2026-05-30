@@ -1,11 +1,11 @@
 ---
 name: showcase
-description: Render HTML/SVG mockups, slideshows, demos, or before/after comparisons and serve them on localhost for preview. Use when the user asks to showcase, mockup, preview designs, render variants, build a slideshow, demo a layout, see how X would look, generate design options, compare design directions, or invokes /showcase. Composes fresh design seeds for visual uniqueness across invocations, enforces a beauty bar, and runs mandatory Playwright verification so output is never broken or misaligned.
+description: Render HTML/SVG mockups, slideshows, demos, or before/after comparisons, serve them on localhost for preview, and optionally publish verified output to a shareable GitHub Pages URL. Use when the user asks to showcase, mockup, preview designs, render variants, build a slideshow, demo a layout, see how X would look, generate design options, compare design directions, publish/share a showcase, or invokes /showcase. Composes fresh design seeds for visual uniqueness across invocations, enforces a beauty bar, and runs mandatory Playwright verification so output is never broken or misaligned.
 ---
 
 # Showcase
 
-Generate one or more polished HTML artifacts (mockups, slides, demos, before/afters, landing snippets), serve them on a localhost port, verify them in a real browser, and report the URL back to the user.
+Generate one or more polished HTML artifacts (mockups, slides, demos, before/afters, landing snippets), serve them on a localhost port, verify them in a real browser, and report the URL back to the user. When the user explicitly asks to publish or share the showcase, publish the verified static output to their configured GitHub Pages showcase repository.
 
 This skill exists because LLM-generated HTML/SVG drifts in three predictable ways: (1) it renders broken or misaligned without anyone noticing, (2) it converges to the same visual tropes invocation after invocation, (3) it settles for "fine" instead of "considered". The workflow below makes all three failure modes structurally hard.
 
@@ -16,6 +16,8 @@ This skill exists because LLM-generated HTML/SVG drifts in three predictable way
    - **Subject**: what is being shown (e.g. "macOS menu-bar popover", "Q3 roadmap", "search redesign before/after").
    - **Variant count**: how many side-by-side options. Default: 3 for `mockup` and `before-after`, 1 for `slides` and `demo`. Honor explicit count in prompt.
    - **Native-platform hint**: if subject mentions macOS / iOS / NSWindow / menu bar / popover / SwiftUI / AppKit, set `nativePlatform = "macos"` (or similar). This forces one variant to use the platform's HIG seed (see below) for accuracy.
+   - **Publish intent**: only set `publish = true` when the user explicitly asks for a public/shared/published link. Never publish by default.
+   - **Publish retention**: when publishing, infer `temp` if the user says temporary, expiring, for N days, share for review, or similar. Infer `persistent` if the user says permanent, keep, portfolio, archive, or similar. If publishing is requested and retention is not inferable, ask whether it should be temporary or persistent. Default temporary duration = 7 days when the user does not specify N.
    - If any of the above is genuinely ambiguous, ask one focused question. Do not ask if you can infer.
 
 2. **Compose design seeds** for visual uniqueness (see `## Design seeds`):
@@ -46,6 +48,9 @@ This skill exists because LLM-generated HTML/SVG drifts in three predictable way
 
    - The root `index.html` (when N > 1) is a clean overview page that lists all variants with brief seed descriptions and links/iframes. It is itself a designed surface, not a bare list.
    - Each variant's `index.html` is a fully self-contained page. No CDNs unless explicitly required and offline-cached. Use system fonts or self-hosted webfonts.
+   - Do not ship fake controls. Every visible button, link, tab, toggle, menu, slider, stepper, slideshow control, doc control, or share/download/print control must either be wired to behavior or intentionally disabled with a visible disabled state.
+   - For `slides` and document-like shared artifacts, include real navigation: previous/next controls, keyboard arrow support, visible progress, and stable deep links or hash state when practical. If the artifact has a table of contents, tabs, filters, or collapsible sections, they must update visible state.
+   - Add a short `interactions` array to `manifest.json` listing each user-facing control and the expected observable result, so verification has a concrete checklist.
    - Use the **beauty bar** rules (see below) for every page.
 
 5. **Serve on localhost** (background):
@@ -64,23 +69,90 @@ This skill exists because LLM-generated HTML/SVG drifts in three predictable way
       - All `<img>` and `<image>` have `complete && naturalWidth > 0`.
       - Computed text-color vs. background contrast ratio for every `data-checkpoint="text"` element is `>= 4.5` (WCAG AA).
       - Custom fonts (if any `@font-face`) report `document.fonts.status === "loaded"`.
-   5. `mcp__playwright__browser_take_screenshot` at the artifact's intended viewport(s):
+   5. **Verify interactions**, using Playwright against real controls, before any screenshot pass:
+      - Enumerate visible interactive elements with roles/selectors: `button`, `a[href]`, `input`, `select`, `textarea`, `summary`, `[role="button"]`, `[role="tab"]`, `[role="switch"]`, `[role="menuitem"]`, `[tabindex]:not([tabindex="-1"])`.
+      - For each item in `manifest.json` `interactions`, perform the interaction and assert the expected visible state, URL/hash, active slide number, expanded/collapsed state, selected tab, copied/downloadable/printable affordance, or navigation target.
+      - For slides and docs, test mouse/touch-equivalent controls plus keyboard: ArrowRight/ArrowLeft for slides, Escape for overlays/modals, Tab focus order for primary controls, and Enter/Space activation where relevant.
+      - Treat inert controls, placeholder buttons, broken internal links, focus traps, missing active states, or controls that only animate without changing meaningful state as failures. Fix and re-verify.
+   6. `mcp__playwright__browser_take_screenshot` at the artifact's intended viewport(s):
       - For `mockup` of native macOS: 1440×900 (full window context) AND a tight crop of the surface itself.
       - For `slides`: 1920×1080.
       - For `landing`: 1440×900, plus 390×844 mobile.
       - For `before-after`: side-by-side viewport.
-   6. **Inspect the screenshot yourself.** Look for: text clipped at edges, overlapping elements, broken layouts, low-contrast text, asymmetric padding, generic-looking output. If any present → fix and re-verify.
+   7. **Inspect the screenshot yourself.** Look for: text clipped at edges, overlapping elements, broken layouts, low-contrast text, asymmetric padding, generic-looking output. If any present → fix and re-verify.
 
    If a variant fails 3 fix passes, surface it to the user with the screenshot and ask whether to regenerate with a different seed or accept the issue.
 
 7. **Open in default browser** (only after all variants pass verification):
    - `open http://127.0.0.1:<port>` so the user sees it immediately.
 
-8. **Report** back with:
+8. **Optionally publish a shareable URL** (only when `publish = true`):
+   - Treat publishing as public internet exposure. Before publishing, confirm there are no secrets, credentials, private customer data, local machine identifiers, or sensitive real user data in the output.
+   - Use `scripts/showcase_publish.py` from this skill directory for setup, publishing, listing, and cleanup. The config path is `$SHOWCASE_PUBLISH_CONFIG` when set, otherwise `~/.config/showcase-skill/publish.json`.
+   - On publish-flow startup, if a publish config exists, run:
+
+     ```bash
+     python3 <skill-dir>/scripts/showcase_publish.py list
+     ```
+
+     If any temporary showcases are expired, ask one concise question: `I found <N> expired temporary published showcase(s). Clean them up before publishing?` If yes, run:
+
+     ```bash
+     python3 <skill-dir>/scripts/showcase_publish.py cleanup --yes
+     ```
+
+   - If no publish config exists, ask where to create the local Pages worktree/folder. Prefer reusing this same GitHub repo on a `gh-pages` branch, with the Pages worktree separate from the skill source checkout. Suggest these paths, with the first available path as the recommendation:
+     - `/Users/mchoi/repos/showcase-skill-pages` when `/Users/mchoi/repos/showcase-skill` exists.
+     - `<skill-repo-parent>/<skill-repo-name>-pages` when the skill repo path can be detected.
+     - `/Users/mchoi/repos/showcases` when the user wants a separate publishing repo.
+     - `~/repos/showcases` when `~/repos` exists.
+     - `~/showcases`.
+     - A custom path if the user wants a different location.
+   - Also ask which GitHub repo to use. Default to this skill's existing remote, e.g. `mikec-git/showcase-skill`, so published URLs look like `https://mikec-git.github.io/showcase-skill/temp/<slug>/`. Use a separate `<current-gh-user>/showcases` repo only if the user asks for a separate publishing repo.
+   - Configure same-repo publishing with:
+
+     ```bash
+     python3 <skill-dir>/scripts/showcase_publish.py configure \
+       --repo-path <chosen-path> \
+       --worktree-from <skill-repo-path> \
+       --github-repo <owner>/<showcase-skill-repo> \
+       --branch gh-pages \
+       --source-dir . \
+       --enable-pages \
+       --install-cleanup-workflow
+     ```
+
+     This creates the local `gh-pages` worktree if needed, pushes the Pages branch, enables GitHub Pages by API, and installs a scheduled cleanup workflow on the default branch. Use `--base-url <url>` instead of `--github-repo` when the user is not publishing to GitHub Pages.
+
+   - Publish temporary output with:
+
+     ```bash
+     python3 <skill-dir>/scripts/showcase_publish.py publish \
+       --source <output-dir> \
+       --kind temp \
+       --days <N> \
+       --slug <slug>
+     ```
+
+   - Publish persistent output with:
+
+     ```bash
+     python3 <skill-dir>/scripts/showcase_publish.py publish \
+       --source <output-dir> \
+       --kind persistent \
+       --slug <slug>
+     ```
+
+   - Temporary showcases remain live until cleanup removes them. The helper records `expires_at`; the optional cleanup workflow removes expired temp folders daily, and the skill also offers cleanup at the start of each publish flow.
+   - On publish-flow teardown, if expired temporary showcases remain and cleanup was not already offered at startup, ask whether to clean them up before the final report. Do not block the final report when the user says no.
+
+9. **Report** back with:
    - The localhost URL.
+   - The public URL when publishing was requested.
    - One line per variant: seed name + the 3-axis differentiation tags (palette / typography / mood).
    - Inline screenshots if available via the tool surface.
    - Path to the output directory.
+   - For temporary public links: the expiry date and cleanup command.
    - A note that the server is running in the background and how to stop it (`lsof -ti tcp:<port> | xargs kill`).
 
 ## Design seeds
@@ -118,7 +190,7 @@ Treat the directions above as starting points to combine, darken, warm, or depar
 
 ## Beauty bar (non-negotiable)
 
-Every page must obey these. Verification step 6.6 looks for violations.
+Every page must obey these. The verification loop looks for violations.
 
 **Typography**
 
@@ -142,7 +214,7 @@ Every page must obey these. Verification step 6.6 looks for violations.
 **Surface treatment**
 
 - Borders 1px solid with `oklch()` or `rgba()` low-opacity ink, not gray middle-tones, unless the seed specifies heavy borders.
-- Shadow: max two layers, both physically plausible (small + diffuse), never `0 0 20px rgba(0,0,0,0.5)` blur dumps.
+- Shadow: only on elevated elements; a two-part contact + ambient layer, both physically plausible (small + diffuse) and tinted toward the surface hue, never identical pure-black shadows on everything or `0 0 20px rgba(0,0,0,0.5)` blur dumps.
 - Corner radius consistent per surface: pick one of {4, 8, 10, 12, 16, 20} and stick with it.
 
 **Iconography**
@@ -234,6 +306,15 @@ The checks script (passed to `browser_evaluate`):
 - Provide stop instructions in the final report: `lsof -ti tcp:<port> | xargs kill`.
 - On macOS, `open http://127.0.0.1:<port>` opens the user's default browser.
 
+## Publishing lifecycle
+
+- Publishing is opt-in and only runs when the user explicitly asks for a public/shared/published URL.
+- The publishing helper stores local setup in `$SHOWCASE_PUBLISH_CONFIG` or `~/.config/showcase-skill/publish.json`.
+- The preferred publishing target is this same GitHub repo on a separate `gh-pages` branch checked out as a sibling local worktree. A separate publishing repo using `main` + `/docs` is still supported when requested.
+- Published paths are `temp/<slug>/` or `persistent/<slug>/`.
+- Temporary showcases are marked with `expires_at`; they are removed when the user accepts cleanup or when the optional daily cleanup workflow runs in the publishing repo.
+- Persistent showcases have no expiry and are not cleaned up unless the user explicitly asks.
+
 ## File hygiene
 
 - `<output-dir>` lives under `.claude/showcases/` and must be gitignored.
@@ -244,6 +325,8 @@ The checks script (passed to `browser_evaluate`):
 
 - Do not call this skill from inside another skill that has its own browser flow (avoid double-launching browsers).
 - If the user only wants the HTML files (no server), they will say so - skip step 5 and 7.
+- If the user asks to publish without a configured publishing repo, ask for setup choices before creating any GitHub repo or remote.
+- If the publishing repo has uncommitted changes, stop and explain that it must be clean before publishing or cleanup.
 - If Playwright is unavailable, fall back to static analysis (HTML parse, CSS link check, image existence) and clearly tell the user that runtime verification was skipped.
 - If three fix passes can't clear the verification for a variant, **show the user the failing screenshot rather than silently shipping broken output**.
 
@@ -253,6 +336,7 @@ A short message in this shape:
 
 ```
 Showcase ready: http://127.0.0.1:<port>
+Public URL: https://<owner>.github.io/showcase-skill/temp/<slug>/ (expires <date>)
 
 Variants:
 - A · apple-hig-macos · system blur, SF Pro, native light/dark split
@@ -260,5 +344,6 @@ Variants:
 - C · brutalist-grid  · JetBrains Mono, neon accent, hard 2px borders
 
 Output: <output-dir>
+Cleanup temp publishes: python3 <skill-dir>/scripts/showcase_publish.py cleanup --yes
 Stop server: lsof -ti tcp:<port> | xargs kill
 ```

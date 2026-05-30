@@ -12,7 +12,7 @@
 
 </div>
 
-A shared Codex and Claude skill for rendering HTML/SVG mockups, slideshows, demos, and before/after comparisons, serving them on localhost for preview, and verifying them in a real browser before the user sees them.
+A shared Codex and Claude skill for rendering HTML/SVG mockups, slideshows, demos, and before/after comparisons, serving them on localhost for preview, verifying them in a real browser before the user sees them, and optionally publishing verified static output to a shareable GitHub Pages URL.
 
 This repository is the single source of truth for both Codex and Claude. Runtime skill paths should symlink back to `skills/showcase` instead of keeping separate copies.
 
@@ -33,9 +33,11 @@ This repository is the single source of truth for both Codex and Claude. Runtime
   - Console must be error-free.
   - No horizontal overflow, no zero-size load-bearing elements, all images loaded, fonts loaded.
   - WCAG AA contrast (>= 4.5:1) on every text checkpoint.
+  - Visible controls must work: slides advance, tabs switch, links navigate, toggles update state, and keyboard controls work where expected.
   - Screenshot at target viewports for visual sanity.
+- **Publish** only when explicitly requested. First publish configures GitHub Pages; later publishes reuse that setup.
 - **Open** the result in the user's default browser only after every variant passes verification.
-- **Report** the localhost URL, per-variant differentiators, output path, and a stop-server command.
+- **Report** the localhost URL, optional public URL, per-variant differentiators, output path, expiry if temporary, and a stop-server command.
 
 ## Why The Verification Loop Exists
 
@@ -64,13 +66,14 @@ See [`skills/showcase/SKILL.md`](skills/showcase/SKILL.md) for the composition p
 **Required for normal use**
 
 - `python3` (for the local static server)
+- `git` (for optional publishing)
 - Playwright MCP server configured in the agent host (so the verifier can drive a real browser)
 - Codex with skill loading from `$CODEX_HOME/skills` or `~/.codex/skills`
 - Claude with skill loading from `~/.claude/skills`
 
 **Optional**
 
-- `gh`, only if you want to publish this repository through GitHub CLI.
+- `gh`, only if you want the publishing helper to create the GitHub repo or enable GitHub Pages automatically.
 
 ## Installation
 
@@ -98,9 +101,56 @@ In Codex or Claude, ask for the skill by name or use the slash form:
 /showcase a slideshow about the Q3 roadmap, 8 slides
 /showcase before/after of the search redesign
 /showcase the macOS menu bar popover with Today/Tomorrow groups
+/showcase a temporary public link to 3 onboarding concepts for 5 days
 ```
 
-The skill infers artifact type, composes seeds, generates files into `<project>/.claude/showcases/<slug>-<timestamp>/`, serves on a free port, runs the verification loop, and opens the result in the default browser.
+The skill infers artifact type, composes seeds, generates files into `<project>/.claude/showcases/<slug>-<timestamp>/`, serves on a free port, runs the verification loop, and opens the result in the default browser. If the user asks to publish or share it, the verified static output is copied into the configured publishing repo and pushed to GitHub Pages.
+
+## Publishing
+
+Publishing is opt-in because GitHub Pages URLs are public. The default setup reuses this same GitHub repo, publishes to a separate `gh-pages` branch, and keeps that branch in a sibling local worktree so generated showcases do not dirty the skill source checkout. On the first publish request, the skill asks where to create the local Pages worktree and suggests a durable path such as `/Users/mchoi/repos/showcase-skill-pages`, `<skill-repo-parent>/<skill-repo-name>-pages`, or a custom path. It stores the answer in:
+
+```text
+~/.config/showcase-skill/publish.json
+```
+
+The helper can create the local `gh-pages` worktree, enable Pages for this repository, install a daily cleanup workflow, and publish verified output:
+
+```bash
+python3 skills/showcase/scripts/showcase_publish.py configure \
+  --repo-path /Users/mchoi/repos/showcase-skill-pages \
+  --worktree-from /Users/mchoi/repos/showcase-skill \
+  --github-repo mikec-git/showcase-skill \
+  --branch gh-pages \
+  --source-dir . \
+  --enable-pages \
+  --install-cleanup-workflow
+```
+
+That produces public URLs shaped like:
+
+```text
+https://mikec-git.github.io/showcase-skill/temp/<slug>/
+```
+
+A separate `owner/showcases` publishing repo is still supported by omitting `--worktree-from`, using `--source-dir docs`, and adding `--create-github-repo` when the repo does not exist.
+
+Temporary publishes get an `expires_at` entry and are removed by cleanup. The skill checks for expired temporary showcases at the start of a publish flow and asks whether to clean them up; the optional GitHub Actions workflow also runs daily.
+
+```bash
+python3 skills/showcase/scripts/showcase_publish.py publish \
+  --source <output-dir> \
+  --kind temp \
+  --days 7 \
+  --slug <slug>
+
+python3 skills/showcase/scripts/showcase_publish.py publish \
+  --source <output-dir> \
+  --kind persistent \
+  --slug <slug>
+
+python3 skills/showcase/scripts/showcase_publish.py cleanup --yes
+```
 
 <details>
 <summary><strong>Output layout, server lifecycle &amp; repository structure</strong></summary>
@@ -110,7 +160,7 @@ The skill infers artifact type, composes seeds, generates files into `<project>/
 ```text
 <project-root-or-home>/.claude/showcases/<slug>-<timestamp>/
   index.html              Overview page (when N > 1) or the artifact itself.
-  manifest.json           Subject, type, seeds used, port, created_at.
+  manifest.json           Subject, type, seeds used, interactions, port, created_at.
   variants/
     <seed-slug>/
       index.html
@@ -137,6 +187,8 @@ install.sh                 Symlink installer for Codex and Claude.
 assets/                    README artwork (hero, pipeline, seed strip).
 skills/showcase/
   SKILL.md                 Main shared skill instructions, including the seed-composition procedure and verification spec.
+  scripts/
+    showcase_publish.py    Optional GitHub Pages configure/publish/cleanup helper.
 ```
 
 </details>
@@ -145,4 +197,5 @@ skills/showcase/
 
 - Verification depends on a Playwright MCP server being available in the agent host. Without it, the skill falls back to static checks and tells the user runtime verification was skipped.
 - Output is static HTML by default. Interactive demos can include `script.js` but the skill is not opinionated about SPA frameworks.
+- Public publishing depends on a GitHub Pages-compatible static artifact and a git remote the user can push to.
 - Seed novelty depends on the rotation window (last 5 invocations); over very long-running projects, distinct-but-similar directions can still recur.
